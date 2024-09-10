@@ -33,10 +33,10 @@ impl Default for State {
 }
 
 thread_local! {
-    static STATE: State = State::default();
-    static MEMORY_MANAGER: MemoryManagerStorage = init_memory_manager();
-    static PRINCIPAL_ADDRESS: StorageRef<Principal, String> = init_btree(&MEMORY_MANAGER, PRINCIPAL_ADDRESS_MEMORY_ID);
-    static ADDRESS_PRINCIPAL: StorageRef<[u8;20], String> = init_btree(&MEMORY_MANAGER, ADDRESS_PRINCIPAL_MEMORY_ID);
+    pub static STATE: State = State::default();
+    pub static MEMORY_MANAGER: MemoryManagerStorage = init_memory_manager();
+    pub static PRINCIPAL_ADDRESS: StorageRef<Principal, String> = init_btree(&MEMORY_MANAGER, PRINCIPAL_ADDRESS_MEMORY_ID);
+    pub static ADDRESS_PRINCIPAL: StorageRef<String, Principal> = init_btree(&MEMORY_MANAGER, ADDRESS_PRINCIPAL_MEMORY_ID);
 }
 
 pub(crate) fn update_root_hash(asset_hashes: &AssetHashes, signature_map: &SignatureMap) {

@@ -1,5 +1,6 @@
 use ic_cdk::query;
 
+mod general;
 mod init_upgrade;
 mod signature_map;
 mod state;
@@ -18,7 +19,7 @@ fn icts_version() -> String {
 #[query(name = "__get_candid_interface_tmp_hack")]
 pub fn __export_did_tmp_() -> String {
     use crate::init_upgrade::SettingsInput;
-    use candid::export_service;
+    use candid::{export_service, Principal};
 
     export_service!();
     __export_service()
