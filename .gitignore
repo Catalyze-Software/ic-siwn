@@ -1,0 +1,37 @@
+# IDEs and editors
+.vscode/
+.idea/
+
+# Ignore temporary files (e.g., emacs or vi)
+**/*~
+
+# MacOS system files
+.DS_Store
+**/.DS_Store
+
+# DFX temporary files
+.dfx/
+
+# Generated files for declarations
+src/declarations/
+
+# Rust build folder
+target/
+
+# Environment variables
+.env
+
+# General log files
+logs/
+*.log
+
+# Various editor config files and directories
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.local # Local configuration files
+
+# Test tools
+pocket-ic

@@ -1,0 +1,21 @@
+[package]
+name = "ic_siwn_provider"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+candid = { workspace = true }
+serde = { workspace = true }
+
+ic-cdk = { workspace = true }
+ic-stable-structures = { workspace = true }
+ic-certified-map = { workspace = true }
+
+near-sdk = { workspace = true }
+
+catalyze-shared = { workspace = true }
+
+ic_siwn = { path = "../ic_siwn" }

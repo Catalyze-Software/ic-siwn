@@ -1,0 +1,30 @@
+[workspace]
+members = ["src/*"]
+resolver = "2"
+
+[profile.release]
+lto = true
+opt-level = 'z'
+
+
+[workspace.dependencies]
+candid = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11"
+serde_json = "1"
+
+ic-cdk = "0.16"
+ic-stable-structures = "0.6"
+ic-cdk-timers = "0.10"
+ic-ledger-types = "0.13"
+ic-certified-map = "0.4"
+
+near-account-id = "1"
+near-sdk = "5.4.0"
+
+url = "2"
+rand_chacha = "0.3"
+sha2 = "0.10"
+base64 = "0.22"
+
+catalyze-shared = { git = "https://github.com/Catalyze-Software/catalyze-shared" }
