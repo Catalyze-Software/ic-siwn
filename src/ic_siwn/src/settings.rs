@@ -161,11 +161,13 @@ fn validate_session_expires_in(expires_in: u64) -> Result<u64, String> {
     Ok(expires_in)
 }
 
+pub const VALID_CHAIN_IDS: [&str; 2] = ["mainnet", "testnet"];
+
 fn validate_chain_id(chain_id: &str) -> Result<String, String> {
     if chain_id.is_empty() {
         return Err(String::from("Chain ID cannot be empty"));
     }
-    if chain_id != "mainnet" || chain_id != "testnet" {
+    if !VALID_CHAIN_IDS.contains(&chain_id) {
         return Err(String::from("Invalid chain ID"));
     }
     Ok(chain_id.to_string())
