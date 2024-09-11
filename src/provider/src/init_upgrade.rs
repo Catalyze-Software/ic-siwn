@@ -1,6 +1,6 @@
 use candid::{CandidType, Principal};
 use ic_cdk::{init, post_upgrade};
-use ic_siwn::settings::SettingsBuilder;
+use ic_siwn::SettingsBuilder;
 use serde::Deserialize;
 
 #[derive(CandidType, Debug, Clone, PartialEq, Deserialize)]
@@ -18,15 +18,14 @@ pub struct SettingsInput {
     /// Will be used as a "Recipient" message signing parameter - The recipient of the message.
     pub app_url: String,
 
-    /// The message that the user is signing. Could be static because the nonce is included in the signing parameters.
-    pub message: Option<String>,
-
     /// The URL that the wallet will call with the signature.
     pub callback_url: String,
 
     /// The salt is used when generating the seed that uniquely identifies each user principal. The salt can only contain
     /// printable ASCII characters.
     pub salt: String,
+
+    pub chain_id: Option<String>,
 
     /// The TTL for a sign-in message in nanoseconds. After this time, the sign-in message will be pruned.
     pub sign_in_expires_in: Option<u64>,
@@ -56,8 +55,9 @@ fn siwn_init(settings_input: SettingsInput) {
     );
 
     // Optional fields
-    if let Some(message) = settings_input.message {
-        ic_siwn_settings = ic_siwn_settings.message(message);
+
+    if let Some(chain_id) = settings_input.chain_id {
+        ic_siwn_settings = ic_siwn_settings.chain_id(chain_id);
     }
     if let Some(expire_in) = settings_input.sign_in_expires_in {
         ic_siwn_settings = ic_siwn_settings.sign_in_expires_in(expire_in);
@@ -85,16 +85,15 @@ fn siwn_init(settings_input: SettingsInput) {
         for feature in runtime_features {
             match feature {
                 RuntimeFeature::IncludeUriInSeed => {
-                    ic_siwn_settings = ic_siwn_settings.runtime_features(vec![
-                        ic_siwn::settings::RuntimeFeature::IncludeUriInSeed,
-                    ]);
+                    ic_siwn_settings = ic_siwn_settings
+                        .runtime_features(vec![ic_siwn::RuntimeFeature::IncludeUriInSeed]);
                 }
             }
         }
     }
 
     // Build and initialize SIWN
-    ic_siwn::init::init(ic_siwn_settings.build().unwrap()).unwrap();
+    ic_siwn::init(ic_siwn_settings.build().unwrap()).unwrap();
 }
 
 /// `init` is called when the canister is created. It initializes the SIWN library with the given settings.

@@ -3,7 +3,7 @@ use url::Url;
 
 const DEFAULT_SIGN_IN_EXPIRES_IN: u64 = 60 * 5 * 1_000_000_000; // 5 minutes
 const DEFAULT_SESSION_EXPIRES_IN: u64 = 30 * 60 * 1_000_000_000; // 30 minutes
-const DEFAULT_MESSAGE: &str = "Sign in with Near";
+const DEFAULT_CHAIN_ID: &str = "mainnet";
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RuntimeFeature {
@@ -27,11 +27,10 @@ pub struct Settings {
     /// Will be used as a "Recipient" message signing parameter - The recipient of the message.
     pub app_url: String,
 
-    /// The message that the user is signing. Could be static because the nonce is included in the signing parameters.
-    pub message: String,
-
     /// The URL that the wallet will call with the signature.
     pub callback_url: String,
+
+    pub chain_id: String,
 
     /// The salt is used when generating the seed that uniquely identifies each user principal. The salt can only contain
     /// printable ASCII characters.
@@ -72,9 +71,9 @@ impl SettingsBuilder {
         SettingsBuilder {
             settings: Settings {
                 app_url: app_url.into(),
-                message: DEFAULT_MESSAGE.to_owned(),
                 callback_url: callback_url.into(),
                 salt: salt.into(),
+                chain_id: DEFAULT_CHAIN_ID.to_owned(),
                 sign_in_expires_in: DEFAULT_SIGN_IN_EXPIRES_IN,
                 session_expires_in: DEFAULT_SESSION_EXPIRES_IN,
                 targets: None,
@@ -83,8 +82,8 @@ impl SettingsBuilder {
         }
     }
 
-    pub fn message(mut self, message: String) -> Self {
-        self.settings.message = message;
+    pub fn chain_id(mut self, chain_id: String) -> Self {
+        self.settings.chain_id = chain_id;
         self
     }
 
@@ -117,6 +116,8 @@ impl SettingsBuilder {
 
     pub fn build(self) -> Result<Settings, String> {
         validate_uri(&self.settings.app_url)?;
+        validate_uri(&self.settings.callback_url)?;
+        validate_chain_id(&self.settings.chain_id)?;
         validate_salt(&self.settings.salt)?;
         validate_sign_in_expires_in(self.settings.sign_in_expires_in)?;
         validate_session_expires_in(self.settings.session_expires_in)?;
@@ -158,6 +159,16 @@ fn validate_session_expires_in(expires_in: u64) -> Result<u64, String> {
         return Err(String::from("Session expires in must be greater than 0"));
     }
     Ok(expires_in)
+}
+
+fn validate_chain_id(chain_id: &str) -> Result<String, String> {
+    if chain_id.is_empty() {
+        return Err(String::from("Chain ID cannot be empty"));
+    }
+    if chain_id != "mainnet" || chain_id != "testnet" {
+        return Err(String::from("Invalid chain ID"));
+    }
+    Ok(chain_id.to_string())
 }
 
 fn validate_targets(targets: &Option<Vec<Principal>>) -> Result<Option<Vec<Principal>>, String> {

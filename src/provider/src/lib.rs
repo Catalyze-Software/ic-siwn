@@ -2,7 +2,9 @@ use ic_cdk::query;
 
 mod general;
 mod init_upgrade;
-mod signature_map;
+mod siwn_get_delegation;
+mod siwn_login;
+mod siwn_prepare_login;
 mod state;
 
 #[query]
@@ -20,6 +22,8 @@ fn icts_version() -> String {
 pub fn __export_did_tmp_() -> String {
     use crate::init_upgrade::SettingsInput;
     use candid::{export_service, Principal};
+    use ic_siwn::{LoginDetails, PrepareLoginDetails, SignedDelegation};
+    use serde_bytes::ByteBuf;
 
     export_service!();
     __export_service()

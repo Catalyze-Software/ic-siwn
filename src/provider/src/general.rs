@@ -1,8 +1,8 @@
 use candid::Principal;
 use ic_cdk::query;
-use ic_siwn::near::NearAccountId;
+use ic_siwn::NearAccountId;
 
-use crate::state::{ADDRESS_PRINCIPAL, PRINCIPAL_ADDRESS};
+use crate::state::{ACCOUNT_ID_PRINCIPAL, PRINCIPAL_ACCOUNT_ID};
 
 /// Retrieves the principal associated with the given Near account ID address.
 ///
@@ -17,11 +17,10 @@ fn get_principal(account_id: String) -> Result<Principal, String> {
     // Create an NearAccountId from the string. This validates the account ID.
     let account_id = NearAccountId::new(&account_id)?;
 
-    ADDRESS_PRINCIPAL.with(|ap| {
-        ap.borrow().get(&account_id.to_string()).map_or(
-            Err("No principal found for the given address".to_string()),
-            |p| Ok(p),
-        )
+    ACCOUNT_ID_PRINCIPAL.with(|ap| {
+        ap.borrow()
+            .get(&account_id.to_string())
+            .ok_or("No principal found for the given address".to_string())
     })
 }
 
@@ -35,11 +34,10 @@ fn get_principal(account_id: String) -> Result<Principal, String> {
 /// * `Err(String)` - An error message if the principal cannot be converted or no account ID is found.
 #[query]
 fn get_account_id(principal: Principal) -> Result<String, String> {
-    PRINCIPAL_ADDRESS.with(|pa| {
-        pa.borrow().get(&principal).map_or(
-            Err("No account ID found for the given principal".to_string()),
-            |a| Ok(a),
-        )
+    PRINCIPAL_ACCOUNT_ID.with(|pa| {
+        pa.borrow()
+            .get(&principal)
+            .ok_or("No account ID found for the given principal".to_string())
     })
 }
 

@@ -2,11 +2,16 @@ use crate::near::NearAccountId;
 use crate::settings::Settings;
 use crate::{hash, with_settings};
 use candid::{CandidType, Deserialize};
+use catalyze_shared::impl_storable_for;
 use ic_cdk::api::time;
 use ic_certified_map::Hash;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt;
+use time::format_description::well_known::Rfc3339;
+use time::OffsetDateTime;
+
+impl_storable_for!(SiwnMessage);
 
 #[derive(Debug)]
 pub enum SiwnMessageError {
@@ -34,6 +39,7 @@ pub struct SiwnMessage {
     pub app_url: String,
     pub callback_url: String,
     pub account_id: String,
+    pub chain_id: String,
     pub nonce: String,
     pub issued_at: u64,
     pub expiration_time: u64,
@@ -53,6 +59,7 @@ impl SiwnMessage {
         with_settings!(|settings: &Settings| {
             SiwnMessage {
                 callback_url: settings.callback_url.clone(),
+                chain_id: settings.chain_id.clone(),
                 app_url: settings.app_url.clone(),
                 account_id: account_id.as_str().to_string(),
                 nonce: nonce.to_string(),
@@ -81,41 +88,37 @@ impl fmt::Display for SiwnMessage {
 }
 
 // TODO: do smth
-// impl From<SiwnMessage> for String {
-//     /// Converts the SIWN message to the [ERC-4361](https://eips.ethereum.org/EIPS/eip-4361) string format.
-//     ///
-//     /// # Returns
-//     ///
-//     /// A string representation of the SIWE message in the ERC-4361 format.
-//     fn from(val: SiwnMessage) -> Self {
-//         let issued_at_datetime =
-//             OffsetDateTime::from_unix_timestamp_nanos(val.issued_at as i128).unwrap();
-//         let issued_at_iso_8601 = issued_at_datetime.format(&Rfc3339).unwrap();
+impl From<SiwnMessage> for String {
+    /// Converts the SIWN message to the string format.
+    ///
+    /// # Returns
+    ///
+    /// A string representation of the SIWN message.
+    fn from(val: SiwnMessage) -> Self {
+        let issued_at_datetime =
+            OffsetDateTime::from_unix_timestamp_nanos(val.issued_at as i128).unwrap();
+        let issued_at_iso_8601 = issued_at_datetime.format(&Rfc3339).unwrap();
 
-//         let expiration_datetime =
-//             OffsetDateTime::from_unix_timestamp_nanos(val.expiration_time as i128).unwrap();
-//         let expiration_iso_8601 = expiration_datetime.format(&Rfc3339).unwrap();
+        let expiration_datetime =
+            OffsetDateTime::from_unix_timestamp_nanos(val.expiration_time as i128).unwrap();
+        let expiration_iso_8601 = expiration_datetime.format(&Rfc3339).unwrap();
 
-//         format!(
-//             "{domain} wants you to sign in with your Ethereum account:\n\
-//             {account_id}\n\n\
-//             {statement}\n\n\
-//             URI: {uri}\n\
-//             Version: {version}\n\
-//             Chain ID: {chain_id}\n\
-//             Nonce: {nonce}\n\
-//             Issued At: {issued_at_iso_8601}\n\
-//             Expiration Time: {expiration_iso_8601}",
-//             domain = val.domain,
-//             account_id = val.account_id,
-//             statement = val.statement,
-//             uri = val.uri,
-//             version = val.version,
-//             chain_id = val.chain_id,
-//             nonce = val.nonce,
-//         )
-//     }
-// }
+        format!(
+            "{app_url} wants you to sign in with your Near account:\n\
+            {account_id}\n\n\
+            URI: {app_url}\n\
+            Callback URL: {nonce}\n\
+            Chain ID: {chain_id}\n\
+            Nonce: {nonce}\n\
+            Issued At: {issued_at_iso_8601}\n\
+            Expiration Time: {expiration_iso_8601}",
+            app_url = val.app_url,
+            chain_id = val.chain_id,
+            account_id = val.account_id,
+            nonce = val.nonce,
+        )
+    }
+}
 
 /// The SiwnMessageMap map key is the hash of the caller account_id and the message nonce.
 /// This ensures every call to `siwe_prepare_login` leads to one new copy of the SIWN message being stored.
