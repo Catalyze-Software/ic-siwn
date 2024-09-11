@@ -32,7 +32,7 @@ pub struct PrepareLoginDetails {
 ///
 /// # Parameters
 /// * `account_id`: A [`crate::near::NearAccountId`] representing the user's Near account ID. This account ID
-///  is validated and used to create the SIWN message.
+/// is validated and used to create the SIWN message.
 ///
 /// # Returns
 /// A `Result` that, on success, contains a [`crate::siwn::SiwnMessage`] with the `nonce` inside of it.
