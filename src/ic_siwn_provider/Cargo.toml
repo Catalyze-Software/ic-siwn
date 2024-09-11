@@ -15,8 +15,6 @@ ic-stable-structures = { workspace = true }
 ic-certified-map = { workspace = true }
 serde_bytes = { workspace = true }
 
-near-sdk = { workspace = true }
-
 catalyze-shared = { workspace = true }
 
 ic_siwn = { path = "../ic_siwn" }

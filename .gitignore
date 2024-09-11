@@ -35,3 +35,5 @@ logs/
 
 # Test tools
 pocket-ic
+
+wasm/

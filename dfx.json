@@ -1,0 +1,13 @@
+{
+  "canisters": {
+    "ic_siwn_provider": {
+      "type": "custom",
+      "package": "ic_siwn_provider",
+      "candid": "candid/ic_siwn_provider.did",
+      "wasm": "wasm/ic_siwn_provider.wasm.gz",
+      "build": [
+        "bash scripts/build.sh"
+      ]
+    }
+  }
+}

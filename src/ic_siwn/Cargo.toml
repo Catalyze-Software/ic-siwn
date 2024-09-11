@@ -5,14 +5,16 @@ edition = "2021"
 
 [dependencies]
 base64 = { workspace = true }
-serde_cbor = "0.11"
-borsh = "1"
-simple_asn1 = "0.6.2"
+serde_cbor = { workspace = true }
+borsh = { workspace = true }
+simple_asn1 = { workspace = true }
 
 candid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_bytes = { workspace = true }
+
+near-account-id = { workspace = true }
 
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
@@ -20,14 +22,10 @@ ic-certified-map = { workspace = true }
 ic-stable-structures = { workspace = true }
 
 url = { workspace = true }
+time = { workspace = true }
 
 sha2 = { workspace = true }
-ring = "0.17"
+ed25519-dalek = { workspace = true }
 rand_chacha = { workspace = true }
-
-time = { version = "0.3.36", features = ["formatting"] }
-
-near-account-id = { workspace = true }
-near-sdk = { workspace = true }
 
 catalyze-shared = { workspace = true }

@@ -1,6 +1,7 @@
 use std::fmt::{self, Display};
 
 use borsh::BorshSerialize;
+use ed25519_dalek::{Verifier, VerifyingKey};
 
 use crate::SiwnMessage;
 
@@ -12,7 +13,7 @@ pub enum NearError {
     DecodingError(String),
     PayloadSerializationError(std::io::Error),
     InvalidSignature(String),
-    PublicKeyParseError(String),
+    PublicKeyParseError(ed25519_dalek::ed25519::Error),
 }
 
 impl fmt::Display for NearError {
@@ -55,6 +56,12 @@ impl From<std::io::Error> for NearError {
     }
 }
 
+impl From<ed25519_dalek::ed25519::Error> for NearError {
+    fn from(err: ed25519_dalek::ed25519::Error) -> Self {
+        NearError::PublicKeyParseError(err)
+    }
+}
+
 impl From<NearError> for String {
     fn from(error: NearError) -> Self {
         error.to_string()
@@ -73,7 +80,8 @@ impl NearAccountId {
     /// # Arguments
     /// * `address` - A string slice representing the Near address.
     pub fn new(address: &str) -> Result<Self, NearError> {
-        near_sdk::AccountId::validate(address).map_err(NearError::AccountIdValidationError)?;
+        near_account_id::AccountId::validate(address)
+            .map_err(NearError::AccountIdValidationError)?;
         Ok(Self(address.to_owned()))
     }
 
@@ -185,16 +193,12 @@ pub fn verify_near_public_key(
     let payload: SignMessageOptionsNEP0413 = message.try_into()?;
     let payload = borsh::to_vec(&payload)?;
 
-    let public_key = format!("ed25519:{public_key}")
-        .as_str()
-        .parse::<near_sdk::PublicKey>()
-        .map_err(|err| NearError::PublicKeyParseError(err.to_string()))?;
-
-    let public_key = public_key.as_bytes();
-    let public_key = ring::signature::UnparsedPublicKey::new(&ring::signature::ED25519, public_key);
+    let public_key = crate::base64::decode_slice_32(&public_key)?;
+    let public_key = VerifyingKey::from_bytes(&public_key)?;
 
     let signature = NearSignature::new(&signature)?;
     let signature = signature.as_byte_array();
+    let signature = ed25519_dalek::Signature::from_bytes(&signature);
 
     public_key
         .verify(&payload, &signature)
