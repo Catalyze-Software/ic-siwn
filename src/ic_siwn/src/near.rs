@@ -216,6 +216,7 @@ pub fn verify_near_public_key(
     message: SiwnMessage,
     public_key: String,
 ) -> Result<(), NearError> {
+    // TODO: check full access key?
     let payload: SignMessageOptionsNEP0413 = message.try_into()?;
     let payload = payload.hash()?;
 
