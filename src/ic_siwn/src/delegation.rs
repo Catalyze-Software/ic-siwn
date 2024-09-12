@@ -2,6 +2,7 @@ use std::{collections::HashMap, fmt};
 
 use super::hash::{self, Value};
 use crate::{
+    coding,
     near::NearAccountId,
     settings::{RuntimeFeature, Settings},
     signature_map::SignatureMap,
@@ -32,8 +33,8 @@ impl fmt::Display for DelegationError {
             DelegationError::WitnessHashMismatch(witness_hash, root_hash) => write!(
                 f,
                 "Internal error: signature map computed an invalid hash tree, witness hash is {}, root hash is {}",
-                crate::base64::encode(witness_hash),
-                crate::base64::encode(root_hash)
+                coding::base64_encode(witness_hash),
+                coding::base64_encode(root_hash)
             ),
             DelegationError::SerializationError(e) => write!(f, "Serialization error: {}", e),
             DelegationError::InvalidSessionKey(e) => write!(f, "Invalid session key: {}", e),

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 base64 = { workspace = true }
+bs58 = { workspace = true }
 serde_cbor = { workspace = true }
 borsh = { workspace = true }
 simple_asn1 = { workspace = true }

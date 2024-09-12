@@ -3,7 +3,7 @@ use std::fmt::{self, Display};
 use borsh::BorshSerialize;
 use ed25519_dalek::{Verifier, VerifyingKey};
 
-use crate::SiwnMessage;
+use crate::{coding, hash::hash_bytes, SiwnMessage};
 
 pub const NEAR_SIGNATURE_LENGTH: usize = 64;
 
@@ -46,6 +46,12 @@ impl From<base64::DecodeError> for NearError {
 
 impl From<base64::DecodeSliceError> for NearError {
     fn from(err: base64::DecodeSliceError) -> Self {
+        NearError::DecodingError(err.to_string())
+    }
+}
+
+impl From<bs58::decode::Error> for NearError {
+    fn from(err: bs58::decode::Error) -> Self {
         NearError::DecodingError(err.to_string())
     }
 }
@@ -118,7 +124,7 @@ impl NearSignature {
     /// # Arguments
     /// * `signature` - A string slice representing the Near signature.
     pub fn new(signature: &str) -> Result<NearSignature, NearError> {
-        let buffer = crate::base64::decode_vec(signature)?;
+        let buffer = crate::coding::base64_decode_vec(signature)?;
 
         if buffer.len() != NEAR_SIGNATURE_LENGTH {
             return Err(NearError::InvalidSignature(format!(
@@ -137,7 +143,7 @@ impl NearSignature {
 
     /// Converts the Near signature into a byte vector.
     pub fn as_bytes(&self) -> Vec<u8> {
-        crate::base64::decode_vec(self.0.clone().as_str()).unwrap()
+        crate::coding::base64_decode_vec(self.0.clone().as_str()).unwrap()
     }
 
     /// Converts the Near signature into a byte array.
@@ -155,33 +161,53 @@ impl Display for NearSignature {
     }
 }
 
-// https://github.com/near/NEPs/blob/master/neps/nep-0413.md
 #[derive(BorshSerialize)]
-pub struct SignMessageOptionsNEP0413 {
-    pub tag: u64,
+pub struct Payload {
     pub message: String,
     pub nonce: [u8; 32],
     pub recipient: String,
     pub callback_url: Option<String>,
 }
 
+// https://github.com/near/NEPs/blob/master/neps/nep-0413.md
+pub struct SignMessageOptionsNEP0413 {
+    pub tag: u32,
+    pub payload: Payload,
+}
+
+impl SignMessageOptionsNEP0413 {
+    pub fn new(payload: Payload) -> Self {
+        SignMessageOptionsNEP0413 {
+            // https://github.com/near/NEPs/blob/master/neps/nep-0413.md#signature
+            // 4-bytes borsh representation of 2^31+413, as the prefix tag.
+            tag: 2147484061,
+            payload,
+        }
+    }
+
+    pub fn hash(&self) -> Result<[u8; 32], NearError> {
+        let tag = borsh::to_vec(&self.tag)?;
+        let payload = borsh::to_vec(&self.payload)?;
+        let payload = [tag.clone(), payload].concat();
+
+        Ok(hash_bytes(payload))
+    }
+}
+
 impl TryFrom<SiwnMessage> for SignMessageOptionsNEP0413 {
     type Error = NearError;
 
     fn try_from(message: SiwnMessage) -> Result<Self, Self::Error> {
-        let nonce = crate::base64::decode_slice_32(&message.nonce)?;
+        let nonce = crate::coding::base64_decode_slice_32(&message.nonce)?;
 
-        let result = SignMessageOptionsNEP0413 {
-            // https://github.com/near/NEPs/blob/master/neps/nep-0413.md#signature
-            // 4-bytes borsh representation of 2^31+413, as the prefix tag.
-            tag: 2147484061,
+        let payload = Payload {
             message: message.to_string(),
-            recipient: message.app_url,
             nonce,
+            recipient: message.account_id,
             callback_url: Some(message.callback_url),
         };
 
-        Ok(result)
+        Ok(SignMessageOptionsNEP0413::new(payload))
     }
 }
 
@@ -191,9 +217,10 @@ pub fn verify_near_public_key(
     public_key: String,
 ) -> Result<(), NearError> {
     let payload: SignMessageOptionsNEP0413 = message.try_into()?;
-    let payload = borsh::to_vec(&payload)?;
+    let payload = payload.hash()?;
 
-    let public_key = crate::base64::decode_slice_32(&public_key)?;
+    // Near public key is encoded base58 string
+    let public_key = coding::bs58_decode_slice_32(&public_key)?;
     let public_key = VerifyingKey::from_bytes(&public_key)?;
 
     let signature = NearSignature::new(&signature)?;

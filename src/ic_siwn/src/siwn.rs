@@ -82,28 +82,15 @@ impl SiwnMessage {
 
 impl fmt::Display for SiwnMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let json = serde_json::to_string(self).map_err(|_| fmt::Error)?;
-        write!(f, "{}", json)
-    }
-}
-
-// TODO: do smth
-impl From<SiwnMessage> for String {
-    /// Converts the SIWN message to the string format.
-    ///
-    /// # Returns
-    ///
-    /// A string representation of the SIWN message.
-    fn from(val: SiwnMessage) -> Self {
         let issued_at_datetime =
-            OffsetDateTime::from_unix_timestamp_nanos(val.issued_at as i128).unwrap();
+            OffsetDateTime::from_unix_timestamp_nanos(self.issued_at as i128).unwrap();
         let issued_at_iso_8601 = issued_at_datetime.format(&Rfc3339).unwrap();
 
         let expiration_datetime =
-            OffsetDateTime::from_unix_timestamp_nanos(val.expiration_time as i128).unwrap();
+            OffsetDateTime::from_unix_timestamp_nanos(self.expiration_time as i128).unwrap();
         let expiration_iso_8601 = expiration_datetime.format(&Rfc3339).unwrap();
 
-        format!(
+        let msg = format!(
             "{app_url} wants you to sign in with your Near account:\n\
             {account_id}\n\n\
             URI: {app_url}\n\
@@ -112,11 +99,12 @@ impl From<SiwnMessage> for String {
             Nonce: {nonce}\n\
             Issued At: {issued_at_iso_8601}\n\
             Expiration Time: {expiration_iso_8601}",
-            app_url = val.app_url,
-            chain_id = val.chain_id,
-            account_id = val.account_id,
-            nonce = val.nonce,
-        )
+            app_url = self.app_url,
+            chain_id = self.chain_id,
+            account_id = self.account_id,
+            nonce = self.nonce,
+        );
+        write!(f, "{}", msg)
     }
 }
 

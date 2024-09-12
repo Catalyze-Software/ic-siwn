@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use rand_chacha::ChaCha20Rng;
 
-mod base64;
+mod coding;
 mod delegation;
 mod hash;
 mod init;
